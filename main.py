@@ -152,46 +152,39 @@ class StartPage(tk.Frame):
         self.tree.delete(item)
                       
     def validation(self):
-        pdfWriter = PyPDF2.PdfFileWriter()
         userfilename = filedialog.asksaveasfilename()
+        pdfWriter = PyPDF2.PdfFileWriter()
 
-        if self.chkValue.get() == False:
-            if userfilename != '':
-                for Parent in self.tree.get_children():
-                    pdfFileObj = open(self.tree.item(Parent)['values'][1], 'rb')
-                    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+        if userfilename != '':
+            for Parent in self.tree.get_children():
+                pdfFileObj = open(self.tree.item(Parent)['values'][1], 'rb')
+                pdfFileBlank = open("ressource/blank.pdf", 'rb')
 
-                    nb_copy_pdf = self.tree.item(Parent)['values'][0]
+                pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+                pdfReaderBlank = PyPDF2.PdfFileReader(pdfFileBlank)
+                
+                nb_copy_pdf = self.tree.item(Parent)['values'][0]
 
-                    for i in range(nb_copy_pdf):
-                        for pageNum in range(pdfReader.numPages):
-                            pageObj = pdfReader.getPage(pageNum)
+                for i in range(nb_copy_pdf):
+                    for pageNum in range(pdfReader.numPages):
+                        pageObj = pdfReader.getPage(pageNum)
+                        pdfWriter.addPage(pageObj)
+
+                        if self.chkValue.get() == True:
+                            #Ajout de la page blanche
+                            pageObj = pdfReaderBlank.getPage(0)
                             pdfWriter.addPage(pageObj)
 
-                    pdfOutput = open(userfilename + '.pdf', 'wb')            
-                    pdfWriter.write(pdfOutput)            
-                    pdfOutput.close()
+                pdfOutput = open(userfilename + '.pdf', 'wb')            
+                pdfWriter.write(pdfOutput)            
                     
-                    self.tree.delete(Parent)
-        elif self.chkValue.get() == True:
-            if userfilename != '':
-                for Parent in self.tree.get_children():
-                    pdfFileObj = open(self.tree.item(Parent)['values'][1], 'rb')
-                    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+                #fermeture des fichiers
+                pdfOutput.close()
+                pdfFileBlank.close()
+                pdfFileObj.close()
 
-                    nb_copy_pdf = self.tree.item(Parent)['values'][0]
-
-                    for i in range(nb_copy_pdf):
-                        for pageNum in range(pdfReader.numPages):
-                            pageObj = pdfReader.getPage(pageNum)
-                            pdfWriter.addPage(pageObj)
-
-                    pdfOutput = open(userfilename + '.pdf', 'wb')            
-                    pdfWriter.write(pdfOutput)            
-                    pdfOutput.close()
-                    
-                    self.tree.delete(Parent)
-
+                #reset du treeview                    
+                self.tree.delete(Parent)
 
 class PageOne(tk.Frame):
     #Constructeur de la page 1
