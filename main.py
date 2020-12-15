@@ -3,11 +3,26 @@ from tkinter import *
 from tkinter import ttk, filedialog
 from tkinter import font
 from tkinter.messagebox import showinfo
-
 import PyPDF2
+import os
+
+
+
+###############################################################################################
+#                              ZONE DE MODIFICATION                                           #
+###############################################################################################
+
+
+nombre_de_ce2 = 9
+nombre_de_cm1 = 11
+nombre_de_cm2 = 13
+
+
+###############################################################################################
+
+
 
 number_copy = ''
-
 class SeaofBTCapp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -18,6 +33,7 @@ class SeaofBTCapp(tk.Tk):
         #configuration de la fenetre
         self.geometry("500x500")
         self.bind('<Key>', self.get_barcode)
+        self.title("PDF Fusion")
         #self.attributes("-fullscreen", True)       
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -37,81 +53,95 @@ class SeaofBTCapp(tk.Tk):
         self.show_frame(StartPage)
         
     def get_barcode(self, event):
+
         global number_copy
 
         if event.char in '0123456789':
             number_copy += event.char
 
         elif event.keysym == 'Return':
-
             number_copy_cast = int(number_copy)
-            
             item = self.frames[StartPage].tree.selection()[0]
             if(number_copy_cast > 0):
-                print(number_copy_cast)
-                self.frames[StartPage].tree.item(item, values = number_copy_cast)
-
+                self.frames[StartPage].tree.item(item, values = (number_copy_cast, self.frames[StartPage].tree.item(item)['values'][1]))
+            else:
+                self.frames[StartPage].tree.delete(item)
             number_copy = ''
 
-
+        elif event.keysym == 'BackSpace':
+            item = self.frames[StartPage].tree.selection()[0]
+            self.frames[StartPage].tree.delete(item)
+            number_copy = ''
+        
     def show_frame(self, cont):
         global id_page
 
         id_page=cont
         frame = self.frames[cont]
         frame.tkraise()
-
         
 class StartPage(tk.Frame):
     #constructeur de la page d'acceuil
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
 
+        global nombre_de_ce2
+        global nombre_de_cm1
+        global nombre_de_cm2
+
         #configuration ligne/colonne StartPage
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=3)
-        self.rowconfigure(2, weight=1)
-        self.rowconfigure(3, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.rowconfigure(0, weight=1)  #reserve pour le titre
+        self.rowconfigure(1, weight=2)
+        self.rowconfigure(2, weight=4)
+        self.rowconfigure(3, weight=2)
+        self.rowconfigure(4, weight=2)
 
-        self.pdfWriter = PyPDF2.PdfFileWriter()
+        ttk.Label(self, text = "Fusion", font = ("Comic Sans MS", 30)).grid(row= 0, column = 0,columnspan = 3)
+        ttk.Button(self, text="Ajouter PDF", command=lambda: self.click(controller)).grid(row= 1, column = 0,columnspan = 3)
 
-        ttk.Button(self, text="Ajouter PDF", command=lambda: self.click(controller)).grid(row= 0, column = 0)
-        ttk.Button(self, text="Supprimer PDF", command=lambda: self.delete()).grid(row= 0, column = 1)
-
-         #TREEVIEW
+        #TREEVIEW
         self.tree = ttk.Treeview(self, selectmode = "extended", height = 0)
-        self.tree["columns"]=("one")
+        self.tree["columns"]=("one","two")
         
         self.tree.column("#0")
         self.tree.column("one")
+        self.tree.column("two")
         
         self.tree.heading("#0", text="fichier")
         self.tree.heading("one", text="copie")
+        self.tree.heading("two", text="chemin")
 
-        self.tree.grid(row=1, column=0,columnspan = 2, sticky='news')
+        self.tree["displaycolumns"]=("one")
 
-        self.nb_copy = ttk.Entry(self)
-        self.nb_copy.grid(column =0, row = 2)
+        self.tree.grid(row=2, column=0,columnspan = 3, sticky='news')
 
-        ttk.Button(self, text="ok", command=lambda: self.change_nb_copy()).grid(row= 2, column = 1)
+        ttk.Button(self, text="CE2", command=lambda: self.auto(nombre_de_ce2)).grid(row = 3, column = 0)
+        ttk.Button(self, text="CM1", command=lambda: self.auto(nombre_de_cm1)).grid(row = 3, column = 1)
+        ttk.Button(self, text="CM2", command=lambda: self.auto(nombre_de_cm2)).grid(row = 3, column = 2)
 
-        ttk.Button(self, text="Annuler", command=lambda: self.reset()).grid(row= 3, column = 0)
-        ttk.Button(self, text="Valider", command=lambda: self.validation()).grid(row= 3, column = 1)
+        self.chkValue = tk.BooleanVar() 
+        self.chkValue.set(False)
+        ttk.Checkbutton(self, text='Insertion page blanche', var=self.chkValue).grid(column=2, row=4)
 
-        
 
-    def click(self, controller): 
-        pdf_to_merge = filedialog.askopenfilename()
-        self.tree.insert("" , "end",    text=pdf_to_merge, values=(1))
+        ttk.Button(self, text="Annuler", command=lambda: self.reset()).grid(row = 4, column = 0)
+        ttk.Button(self, text="Fusion", command=lambda: self.validation()).grid(row = 4, column = 1)
 
-    def change_nb_copy(self):
+    def auto(self,data):
         item = self.tree.selection()[0]
-        nb_copy_ = int(self.nb_copy.get())
-        if(nb_copy_ > 0):
-            print("ok")
-            self.tree.item(item, values = (nb_copy_))
+        if(data > 0):
+            self.tree.item(item, values = (data, self.tree.item(item)['values'][1]))
+
+    def click(self, controller):
+        pdf_to_merge = filedialog.askopenfilename()
+
+        name = os.path.basename(pdf_to_merge)
+
+        if pdf_to_merge != '':
+            self.tree.insert("" , "end",    text=name, values=(1,pdf_to_merge))
 
     def reset(self):
         for i in self.tree.get_children():
@@ -120,35 +150,53 @@ class StartPage(tk.Frame):
     def delete(self):
         item = self.tree.selection()[0]
         self.tree.delete(item)
-        self.pdfWriter = PyPDF2.PdfFileWriter()
                       
     def validation(self):
+        pdfWriter = PyPDF2.PdfFileWriter()
         userfilename = filedialog.asksaveasfilename()
 
-        for Parent in self.tree.get_children():
-            
-            pdfFileObj = open(self.tree.item(Parent)['text'], 'rb')
-            pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+        if self.chkValue.get() == False:
+            if userfilename != '':
+                for Parent in self.tree.get_children():
+                    pdfFileObj = open(self.tree.item(Parent)['values'][1], 'rb')
+                    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
 
-            nb_copy_pdf = self.tree.item(Parent)['values'][0]
+                    nb_copy_pdf = self.tree.item(Parent)['values'][0]
 
-            print(nb_copy_pdf)
+                    for i in range(nb_copy_pdf):
+                        for pageNum in range(pdfReader.numPages):
+                            pageObj = pdfReader.getPage(pageNum)
+                            pdfWriter.addPage(pageObj)
 
-            for i in range(nb_copy_pdf):
-                for pageNum in range(pdfReader.numPages):
-                    pageObj = pdfReader.getPage(pageNum)
-                    self.pdfWriter.addPage(pageObj)            
+                    pdfOutput = open(userfilename + '.pdf', 'wb')            
+                    pdfWriter.write(pdfOutput)            
+                    pdfOutput.close()
+                    
+                    self.tree.delete(Parent)
+        elif self.chkValue.get() == True:
+            if userfilename != '':
+                for Parent in self.tree.get_children():
+                    pdfFileObj = open(self.tree.item(Parent)['values'][1], 'rb')
+                    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
 
-            pdfOutput = open(userfilename + '.pdf', 'wb')            
-            self.pdfWriter.write(pdfOutput)            
-            pdfOutput.close()
+                    nb_copy_pdf = self.tree.item(Parent)['values'][0]
+
+                    for i in range(nb_copy_pdf):
+                        for pageNum in range(pdfReader.numPages):
+                            pageObj = pdfReader.getPage(pageNum)
+                            pdfWriter.addPage(pageObj)
+
+                    pdfOutput = open(userfilename + '.pdf', 'wb')            
+                    pdfWriter.write(pdfOutput)            
+                    pdfOutput.close()
+                    
+                    self.tree.delete(Parent)
 
 
 class PageOne(tk.Frame):
     #Constructeur de la page 1
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
 
 app = SeaofBTCapp()
 app.mainloop()
