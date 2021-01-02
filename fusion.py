@@ -6,16 +6,11 @@ from tkinter.messagebox import showinfo
 import PyPDF2
 import os
 
-
+import configparser
 
 ###############################################################################################
 #                              ZONE DE MODIFICATION                                           #
 ###############################################################################################
-
-
-nombre_de_ce2 = 9
-nombre_de_cm1 = 11
-nombre_de_cm2 = 13
 
 
 ###############################################################################################
@@ -98,6 +93,7 @@ class StartPage(tk.Frame):
         self.rowconfigure(2, weight=4)
         self.rowconfigure(3, weight=2)
         self.rowconfigure(4, weight=2)
+        self.rowconfigure(5, weight=2)
 
         ttk.Label(self, text = "Fusion", font = ("Comic Sans MS", 30)).grid(row= 0, column = 0,columnspan = 3)
         ttk.Button(self, text="Ajouter PDF", command=lambda: self.click(controller)).grid(row= 1, column = 0,columnspan = 3)
@@ -122,13 +118,17 @@ class StartPage(tk.Frame):
         ttk.Button(self, text="CM1", command=lambda: self.auto(nombre_de_cm1)).grid(row = 3, column = 1)
         ttk.Button(self, text="CM2", command=lambda: self.auto(nombre_de_cm2)).grid(row = 3, column = 2)
 
+        ttk.Button(self, text="CE2F", command=lambda: self.auto(nombre_de_ce2_f)).grid(row = 4, column = 0)
+        ttk.Button(self, text="CM1+CM2", command=lambda: self.auto(nombre_de_cm2+nombre_de_cm1)).grid(row = 4, column = 1)
+        ttk.Button(self, text="Tous", command=lambda: self.auto(nombre_de_cm2+nombre_de_cm1+nombre_de_ce2)).grid(row = 4, column = 2)
+
         self.chkValue = tk.BooleanVar() 
         self.chkValue.set(False)
-        ttk.Checkbutton(self, text='Insertion page blanche', var=self.chkValue).grid(column=2, row=4)
+        ttk.Checkbutton(self, text='Insertion page blanche', var=self.chkValue).grid(column=2, row=5)
 
 
-        ttk.Button(self, text="Reset", command=lambda: self.reset()).grid(row = 4, column = 0)
-        ttk.Button(self, text="Fusion", command=lambda: self.validation()).grid(row = 4, column = 1)
+        ttk.Button(self, text="Reset", command=lambda: self.reset()).grid(row = 5, column = 0)
+        ttk.Button(self, text="Fusion", command=lambda: self.validation()).grid(row = 5, column = 1)
 
     def auto(self,data):
         item = self.tree.selection()[0]
@@ -165,6 +165,8 @@ class StartPage(tk.Frame):
                 
                 nb_copy_pdf = self.tree.item(Parent)['values'][0]
 
+                
+
                 for i in range(nb_copy_pdf):
                     for pageNum in range(pdfReader.numPages):
                         pageObj = pdfReader.getPage(pageNum)
@@ -172,6 +174,15 @@ class StartPage(tk.Frame):
 
                         if self.chkValue.get() == True:
                             #Ajout de la page blanche
+                            pageObj = pdfReaderBlank.getPage(0)
+                            pdfWriter.addPage(pageObj)
+                    if pdfReader.numPages%2 == 1:
+                        #si nombre de page impair on rajoute une page blanche
+                        pageObj = pdfReaderBlank.getPage(0)
+                        pdfWriter.addPage(pageObj)
+
+                        if self.chkValue.get() == True:
+                            #Ajout de la page blanche si case coché et impair
                             pageObj = pdfReaderBlank.getPage(0)
                             pdfWriter.addPage(pageObj)
 
@@ -190,6 +201,17 @@ class PageOne(tk.Frame):
     #Constructeur de la page 1
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+
+
+#ouverture du fichier de configuration
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+#recuperation des données du fichier config.ini
+nombre_de_ce2 = int(config.get('parametre', 'nombre_de_ce2'))
+nombre_de_ce2_f = int(config.get('parametre', 'nombre_de_ce2_f'))
+nombre_de_cm1 = int(config.get('parametre', 'nombre_de_cm1'))
+nombre_de_cm2 = int(config.get('parametre', 'nombre_de_cm2'))
 
 app = SeaofBTCapp()
 app.mainloop()
