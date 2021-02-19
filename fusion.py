@@ -23,7 +23,7 @@ class SeaofBTCapp(tk.Tk):
         #INITIALISATION GENERAL
         #configuration de la fenetre
         self.geometry("700x700")
-        self.resizable(width=0, height=0)
+        #self.resizable(width=0, height=0)
         self.title("PDF + Word Fusion")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -65,11 +65,11 @@ class StartPage(tk.Frame):
         self.columnconfigure( 3, weight=1)
 
         self.rowconfigure( 0, weight = 1)
-        self.rowconfigure( 1, weight = 2)
-        self.rowconfigure( 2, weight = 4)
-        self.rowconfigure( 3, weight = 2)
-        self.rowconfigure( 4, weight = 2)
-        self.rowconfigure( 5, weight = 2)
+        self.rowconfigure( 1, weight = 1)
+        self.rowconfigure( 2, weight = 6)
+        self.rowconfigure( 3, weight = 1)
+        self.rowconfigure( 4, weight = 1)
+        self.rowconfigure( 5, weight = 1)
 
         ttk.Label(self, text = "Fusion", font = ("Comic Sans MS", 30)).grid(row= 0, column = 0,columnspan = 4)
         ttk.Button(self, text="Ajouter fichier", command=lambda: self.click(controller)).grid(row= 1, column = 0,columnspan = 4,sticky='')
@@ -230,24 +230,30 @@ class StartPage(tk.Frame):
             self.tree.item(item, values = (data, self.tree.item(item)['values'][1], self.tree.item(item)['values'][2], self.tree.item(item)['values'][3], self.tree.item(item)['values'][4]))
 
     def click(self, controller):
-        pdf_to_merge = filedialog.askopenfilename(filetypes=(("WORD files","*.docx"),("PDF files","*.pdf")))
+        pdf_to_merge = filedialog.askopenfilename(filetypes=(("WORD/PDF files","*.docx"),("WORD/PDF files","*.pdf")), multiple=True)
+        #pdf_to_merge = filedialog.askopenfilename(multiple=True)
         
-        p = Path(pdf_to_merge)
         
-        if pdf_to_merge != '':
-            if p.suffix == '.pdf':
-                self.tree.insert("" , "end",    text=p.name, values=(1,pdf_to_merge,self.obtenir_nombre_de_page_pdf(pdf_to_merge), 1, self.obtenir_nombre_de_page_pdf(pdf_to_merge) ))
-                showinfo("Import", "Importation PDF terminée."  )
 
-            elif p.suffix == '.docx':
-                temp_path = 'conversion\\' + p.stem +'.pdf'
-                p_copy = Path(temp_path)
-                convert(pdf_to_merge, temp_path)
-                self.tree.insert("" , "end",    text=p_copy.name, values=(1,temp_path,self.obtenir_nombre_de_page_pdf(temp_path), 1,self.obtenir_nombre_de_page_pdf(temp_path)))	
-                showinfo("Conversion Word en PDF", "Conversion de "+ p.name + " en " + p_copy.name + " terminée."  )
+        print(pdf_to_merge)
+        for path in pdf_to_merge:
+            p = Path(path)        
+        
+            if path != '':
+                if p.suffix == '.pdf':
+                    self.tree.insert("" , "end",    text=p.name, values=(1,path,self.obtenir_nombre_de_page_pdf(path), 1, self.obtenir_nombre_de_page_pdf(path) ))
+                    showinfo("Import", "Importation PDF terminée."  )
 
-            else:
-                showinfo("Problème fichier", "Une erreur est survenue avec le fichier."  )
+                elif p.suffix == '.docx':
+                    temp_path = 'conversion\\' + p.stem +'.pdf'
+                    p_copy = Path(temp_path)
+                    convert(path, temp_path)
+                    self.tree.insert("" , "end",    text=p_copy.name, values=(1,temp_path,self.obtenir_nombre_de_page_pdf(temp_path), 1,self.obtenir_nombre_de_page_pdf(temp_path)))	
+                    showinfo("Conversion Word en PDF", "Conversion de "+ p.name + " en " + p_copy.name + " terminée."  )
+
+                else:
+                    showinfo("Problème fichier", "Une erreur est survenue avec le fichier."  )
+        
 
     def obtenir_nombre_de_page_pdf(self, adresse):
         #ouverture du fichier
