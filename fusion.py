@@ -242,17 +242,18 @@ class StartPage(tk.Frame):
             if path != '':
                 if p.suffix == '.pdf':
                     self.tree.insert("" , "end",    text=p.name, values=(1,path,self.obtenir_nombre_de_page_pdf(path), 1, self.obtenir_nombre_de_page_pdf(path) ))
-                    showinfo("Import", "Importation PDF terminée."  )
+                    #showinfo("Import", "Importation PDF terminée."  )
 
                 elif p.suffix == '.docx':
                     temp_path = 'conversion\\' + p.stem +'.pdf'
                     p_copy = Path(temp_path)
                     convert(path, temp_path)
                     self.tree.insert("" , "end",    text=p_copy.name, values=(1,temp_path,self.obtenir_nombre_de_page_pdf(temp_path), 1,self.obtenir_nombre_de_page_pdf(temp_path)))	
-                    showinfo("Conversion Word en PDF", "Conversion de "+ p.name + " en " + p_copy.name + " terminée."  )
-
+                    #showinfo("Conversion Word en PDF", "Conversion de "+ p.name + " en " + p_copy.name + " terminée."  )
                 else:
                     showinfo("Problème fichier", "Une erreur est survenue avec le fichier."  )
+            
+        showinfo("Import","Importation terminée."  )
         
 
     def obtenir_nombre_de_page_pdf(self, adresse):
